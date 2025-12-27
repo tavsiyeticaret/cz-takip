@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>CZ TAKİP v60</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --radius-card:18px;
+  --radius-pill:999px;
+  --shadow:0 10px 30px rgba(15,23,42,.15);
+}
+
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding:16px;
+  transition:.2s;
+}
+
+/* AÇIK TEMA */
+body.light{
+  --bg:#eef4ff;
+  --card:#fff;
+  --text:#111827;
+  --muted:#6b7280;
+  --accent:#2563eb;
+  --soft:#e5edff;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* KOYU TEMA */
+body.dark{
+  --bg:#020617;
+  --card:#0f172a;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --accent:#8b5cf6;
+  --soft:#1e293b;
+  background:radial-gradient(circle at top,#1e293b,#020617);
+  color:var(--text);
+}
+
+.title{
+  text-align:center;
+  font-size:32px;
+  font-weight:800;
+  letter-spacing:.12em;
+}
+
+.subtitle{
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:16px;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.chip{
+  border-radius:var(--radius-pill);
+  padding:8px 14px;
+  border:none;
+  background:var(--soft);
+  color:var(--accent);
+  font-weight:600;
+  cursor:pointer;
+}
+
+.card{
+  background:var(--card);
+  border-radius:var(--radius-card);
+  padding:14px 16px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow);
+}
+
+.card h3{
+  font-size:18px;
+  margin-bottom:8px;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin-top:4px;
+}
+
+.label{color:var(--muted)}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:var(--radius-pill);
+  border:1px solid #cbd5f5;
+  font-size:18px;
+  text-align:center;
+  margin-top:6px;
+}
+
+.info{
+  margin-top:8px;
+  padding:8px 10px;
+  border-radius:12px;
+  font-weight:600;
+  display:none;
+}
+
+.ok{background:#e8ffe8;color:#16a34a}
+.bad{background:#ffe8e8;color:#dc2626}
+.neutral{background:#e8f0ff;color:#2563eb}
+
+.save{
+  width:100%;
+  margin-top:12px;
+  padding:14px;
+  border-radius:var(--radius-pill);
+  border:none;
+  font-size:18px;
+  font-weight:700;
+  background:linear-gradient(90deg,#2563eb,#1d4ed8);
+  color:#fff;
+}
+</style>
+</head>
+
+<body>
+<div class="title">CZ TAKİP</div>
+<div class="subtitle">20 günde 1 bölüm · 30 bölümlü CZ döngüsü</div>
+
+<div class="top">
+  <button id="themeBtn" class="chip">🌙 Koyu tema</button>
+  <button id="startBtn" class="chip">⚙ Başlangıç bölümü</button>
+</div>
+
+<div class="card">
+  <h3>📅 Tarih & Süre</h3>
+  <div class="row"><span class="label">Bugün:</span><strong id="today"></strong></div>
+  <div class="row"><span class="label">Bitiş tarihi:</span><strong id="end"></strong></div>
+  <div class="row"><span class="label">Kalan gün:</span><strong id="left"></strong></div>
+</div>
+
+<div class="card">
+  <h3>📘 Bölüm Bilgisi</h3>
+  <div class="row"><span class="label">Olman gereken bölüm:</span><strong id="section"></strong></div>
+  <div class="row"><span class="label">Sayfa aralığı:</span><strong id="range"></strong></div>
+</div>
+
+<div class="card">
+  <h3>📖 Okuma Girişi</h3>
+  <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa">
+  <div id="info" class="info neutral"></div>
+  <button class="save" id="save">Kaydet</button>
+</div>
+
+<script>
+/* === SİSTEM SABİTLERİ (DEĞİŞMEZ) === */
+const DAY = 86400000;
+const REF = Date.UTC(2022,3,12); // Ortak sistem başlangıcı
+const TOTAL = 30;
+const PER = 20;
+const LAST = 604;
+const VERSION = 60;
+
+const $ = id => document.getElementById(id);
+
+/* === GÜVENLİ STATE YÖNETİMİ === */
+function loadState(){
+  try{
+    const raw = localStorage.getItem("cz_state");
+    if(!raw) throw "empty";
+    const s = JSON.parse(raw);
+    if(s.version !== VERSION) throw "version";
+    return s;
+  }catch{
+    const fresh = {
+      version: VERSION,
+      start: 1,
+      last: 0
+    };
+    localStorage.setItem("cz_state", JSON.stringify(fresh));
+    return fresh;
+  }
+}
+
+function saveState(s){
+  localStorage.setItem("cz_state", JSON.stringify(s));
+}
+
+/* === TARİH FONKSİYONLARI === */
+function todayUTC(){
+  const d = new Date();
+  return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function fmt(u){
+  const d = new Date(u);
+  return String(d.getUTCDate()).padStart(2,"0")+"."+
+         String(d.getUTCMonth()+1).padStart(2,"0")+"."+
+         d.getUTCFullYear();
+}
+
+/* === ANA RENDER === */
+function render(){
+  const s = loadState();
+  const now = todayUTC();
+
+  let diff = Math.floor((now - REF) / DAY);
+  if(diff < 0) diff = 0;
+
+  const cycle = Math.floor(diff / PER);
+  const cycleEnd = REF + cycle*PER*DAY + (PER-1)*DAY;
+
+  $("today").textContent = fmt(now);
+  $("end").textContent = fmt(cycleEnd);
+  $("left").textContent =
+    Math.max(0, Math.floor((cycleEnd-now)/DAY)+1) + " gün";
+
+  const reqSection = ((s.start - 1 + cycle) % TOTAL) + 1;
+  const dayIn = diff % PER;
+
+  let reqPage = (reqSection - 1) * PER + dayIn + 1;
+  if(reqPage > LAST) reqPage = LAST;
+
+  $("section").textContent = reqSection;
+  $("range").textContent =
+    reqSection === 30 ? "581 – 604"
+    : ((reqSection-1)*20+1) + " – " + ((reqSection-1)*20+20);
+
+  const info = $("info");
+  if(s.last){
+    const d = s.last - reqPage;
+    info.style.display = "block";
+    if(d > 0){
+      info.className = "info ok";
+      info.textContent = d + " sayfa ileridesin";
+    }else if(d < 0){
+      info.className = "info bad";
+      info.textContent = Math.abs(d) + " sayfa geridesin";
+    }else{
+      info.className = "info neutral";
+      info.textContent = "Tam yerindesin";
+    }
+  }else{
+    info.style.display = "none";
+  }
+
+  $("page").value = s.last || "";
+}
+
+/* === EVENTLER === */
+$("save").onclick = () => {
+  const s = loadState();
+  let v = parseInt($("page").value, 10);
+  if(Number.isNaN(v) || v <= 0) return;
+  if(v > LAST) v = LAST;
+  s.last = v;
+  saveState(s);
+  render();
+};
+
+$("startBtn").onclick = () => {
+  const s = loadState();
+  let n = parseInt(prompt("Başlangıç bölümü (1–30):", s.start), 10);
+  if(n >= 1 && n <= 30){
+    s.start = n;
+    saveState(s);
+    render();
+  }
+};
+
+$("themeBtn").onclick = () => {
+  const dark = document.body.classList.toggle("dark");
+  document.body.classList.toggle("light", !dark);
+  localStorage.setItem("theme", dark ? "dark" : "light");
+};
+
+/* === INIT === */
+(function init(){
+  const t = localStorage.getItem("theme") || "light";
+  document.body.classList.add(t);
+  render();
+})();
+</script>
+</body>
+</html>
