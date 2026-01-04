@@ -2,28 +2,24 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CZ TAKİP</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     :root{
       --radius-card:18px;
       --radius-pill:999px;
       --shadow:0 10px 30px rgba(15,23,42,.15);
-      --focus:0 0 0 3px rgba(37,99,235,.25);
     }
-
     body{
       font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
       padding:16px;
       transition:.2s;
-      min-height:100vh;
     }
 
     body.light{
       --bg:#eef4ff;
-      --card:#ffffff;
+      --card:#fff;
       --text:#111827;
       --muted:#6b7280;
       --accent:#2563eb;
@@ -48,23 +44,23 @@
       font-size:32px;
       font-weight:800;
       letter-spacing:.12em;
-      margin-top:6px;
+      margin-top:2px;
     }
     .subtitle{
       text-align:center;
       font-size:13px;
       color:var(--muted);
-      margin:10px 0 16px;
+      margin:6px 0 14px;
     }
 
     .top{
       display:flex;
       justify-content:space-between;
-      gap:10px;
+      gap:8px;
       margin-bottom:14px;
     }
+
     .chip{
-      flex:1;
       border-radius:var(--radius-pill);
       padding:10px 14px;
       border:none;
@@ -74,7 +70,6 @@
       cursor:pointer;
       display:flex;
       align-items:center;
-      justify-content:center;
       gap:8px;
     }
 
@@ -87,18 +82,16 @@
     }
     .card h3{
       font-size:18px;
-      margin-bottom:10px;
+      margin-bottom:8px;
     }
 
     .row{
       display:flex;
       justify-content:space-between;
-      gap:10px;
-      margin-top:6px;
-      align-items:center;
+      margin-top:4px;
+      gap:12px;
     }
     .label{color:var(--muted)}
-    .value{font-weight:800}
 
     input{
       width:100%;
@@ -107,15 +100,15 @@
       border:1px solid #cbd5f5;
       font-size:18px;
       text-align:center;
-      margin-top:8px;
-      outline:none;
+      margin-top:6px;
+      background:transparent;
+      color:inherit;
     }
-    input:focus{box-shadow:var(--focus);border-color:#93c5fd}
 
     .info{
       margin-top:10px;
       padding:10px 12px;
-      border-radius:14px;
+      border-radius:12px;
       font-weight:800;
       display:none;
     }
@@ -130,73 +123,17 @@
       border-radius:var(--radius-pill);
       border:none;
       font-size:18px;
-      font-weight:900;
+      font-weight:800;
       background:linear-gradient(90deg,#2563eb,#1d4ed8);
       color:#fff;
       cursor:pointer;
     }
 
-    /* ZORUNLU MODAL */
-    .overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(2,6,23,.55);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:16px;
-      z-index:9999;
-    }
-    .modal{
-      width:min(520px,100%);
-      background:var(--card);
-      color:var(--text);
-      border-radius:22px;
-      box-shadow:0 20px 60px rgba(0,0,0,.35);
-      padding:16px;
-    }
-    .modal h4{
-      font-size:18px;
-      margin-bottom:8px;
-    }
-    .modal p{
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.4;
-      margin-bottom:10px;
-    }
-    .modal .note{
-      background:var(--soft);
-      border-radius:14px;
-      padding:10px 12px;
-      margin:10px 0 12px;
-      color:var(--text);
-      font-size:13px;
-      line-height:1.35;
-    }
-    .modal .actions{
-      display:flex;
-      gap:10px;
-      margin-top:12px;
-    }
-    .modal .actions button{
-      flex:1;
-      border:none;
-      border-radius:var(--radius-pill);
-      padding:12px 14px;
-      font-weight:900;
-      cursor:pointer;
-    }
-    .btn-primary{
-      background:var(--accent);
-      color:#fff;
-    }
     .hint{
-      margin-top:8px;
       font-size:12px;
       color:var(--muted);
-      text-align:center;
-      display:none;
+      margin-top:8px;
+      line-height:1.35;
     }
   </style>
 </head>
@@ -207,166 +144,133 @@
 
   <div class="top">
     <button id="themeBtn" class="chip">🌙 Tema</button>
-    <button id="nowBtn" class="chip">⚙️ Şu anki bölüm</button>
+    <button id="curBtn" class="chip">⚙️ Şu anki bölüm</button>
   </div>
 
   <div class="card">
     <h3>📅 Tarih & Süre</h3>
-    <div class="row"><span class="label">Bugün:</span><span class="value" id="today"></span></div>
-    <div class="row"><span class="label">Bitiş tarihi:</span><span class="value" id="end"></span></div>
-    <div class="row"><span class="label">Kalan gün:</span><span class="value" id="left"></span></div>
+    <div class="row"><span class="label">Bugün:</span><strong id="today"></strong></div>
+    <div class="row"><span class="label">Bitiş tarihi:</span><strong id="end"></strong></div>
+    <div class="row"><span class="label">Kalan gün:</span><strong id="left"></strong></div>
   </div>
 
   <div class="card">
     <h3>📘 Bölüm Bilgisi</h3>
-    <div class="row"><span class="label">Olman gereken bölüm:</span><span class="value" id="section"></span></div>
-    <div class="row"><span class="label">Sayfa aralığı:</span><span class="value" id="range"></span></div>
+    <div class="row"><span class="label">Olman gereken bölüm:</span><strong id="section"></strong></div>
+    <div class="row"><span class="label">Sayfa aralığı:</span><strong id="range"></strong></div>
   </div>
 
   <div class="card">
     <h3>📖 Okuma Girişi</h3>
-    <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa">
+    <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa" />
     <div id="info" class="info neutral"></div>
     <button class="save" id="save">Kaydet</button>
-  </div>
-
-  <!-- ZORUNLU MODAL -->
-  <div id="overlay" class="overlay">
-    <div class="modal">
-      <h4>Şu an hangi bölümdesin? (1–30)</h4>
-      <p>Bu bilgi ilk kurulum için zorunlu. Daha sonra sağ üstten tekrar değiştirilebilir: “⚙️ Şu anki bölüm”.</p>
-
-      <div class="note">
-        Not: Sisteme geçerken ilk başladığın bölümü hatırlamıyorsan, şu anki bölümünün <b>7 eksiğini</b> başlangıç kabul ediyoruz.<br>
-        Örnek 1: Şu an 8. bölüm → Başlangıç 1<br>
-        Örnek 2: Şu an 5. bölüm → Başlangıç 29
-      </div>
-
-      <input id="nowSectionInput" type="number" min="1" max="30" placeholder="Örn: 8">
-      <div id="modalHint" class="hint">Lütfen 1 ile 30 arasında bir sayı gir.</div>
-
-      <div class="actions">
-        <button id="modalSave" class="btn-primary">Kaydet</button>
-      </div>
+    <div class="hint">
+      Not: Bu sisteme geçerken herkes 3 yıl önceki ilk bölümünü hatırlamayabilir.
+      İlk açılışta sadece “Şu anki bölüm”ünü gir. Sistem otomatik olarak “başlangıç bölümünü” (şu anki bölüm − 7) şeklinde hesaplar.
+      Sonradan sağ üstten tekrar değiştirilebilir.
     </div>
   </div>
 
   <script>
     const DAY = 86400000;
 
-    /* Döngü referansı: 01.01.2026 => 20 günlük periyotların sonu 20.01.2026, 09.02.2026 ... */
-    const REF = Date.UTC(2026, 0, 1);
-
-    const TOTAL_SECTIONS = 30;
-    const PAGES_PER_SECTION = 20;
+    const REF = Date.UTC(2026, 0, 1);     // 01.01.2026 UTC
+    const TOTAL = 30;                    // 30 bölüm
+    const DAYS_PER_SECTION = 20;         // 20 gün
+    const PAGES_PER_SECTION = 20;        // 20 sayfa
     const LAST_PAGE = 604;
-    const OFFSET_FOR_START = 7; // şu anki bölümün 7 eksiği başlangıç kabulü
 
     const $ = (id) => document.getElementById(id);
 
-    function todayUTC(){
+    function todayUTCStart(){
       const d = new Date();
       return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
     }
 
-    function fmt(u){
+    function fmtUTC(u){
       const d = new Date(u);
       const dd = String(d.getUTCDate()).padStart(2,"0");
       const mm = String(d.getUTCMonth()+1).padStart(2,"0");
       const yy = d.getUTCFullYear();
-      return dd+"."+mm+"."+yy;
+      return dd + "." + mm + "." + yy;
     }
 
     function wrapSection(n){
-      let x = ((n - 1) % TOTAL_SECTIONS);
-      if(x < 0) x += TOTAL_SECTIONS;
-      return x + 1;
+      let x = n % TOTAL;
+      if(x <= 0) x += TOTAL;
+      return x;
     }
 
-    function getStartSectionFromNow(nowSection){
-      return wrapSection(nowSection - OFFSET_FOR_START);
+    function askCurrentSection(force){
+      const already = localStorage.getItem("startSection");
+      if(already && !force) return;
+
+      let cur = prompt(
+        "Şu an hangi bölümdesin? (1–30)\n\nSistem otomatik hesaplar:\nBaşlangıç = (Şu anki bölüm − 7)\nÖrnek: 8 → 1, 5 → 28"
+      );
+
+      if(cur === null) return;
+
+      cur = parseInt(cur,10);
+      if(!Number.isFinite(cur) || cur < 1 || cur > 30){
+        alert("Lütfen 1 ile 30 arasında bir bölüm gir.");
+        return askCurrentSection(true);
+      }
+
+      const start = wrapSection(cur - 7);
+      localStorage.setItem("startSection", String(start));
     }
 
-    function ensureNowSection(){
-      const saved = parseInt(localStorage.getItem("nowSection") || "0", 10);
-      if(saved >= 1 && saved <= 30) return saved;
+    function getStartSection(){
+      const v = parseInt(localStorage.getItem("startSection") || "0", 10);
+      if(Number.isFinite(v) && v >= 1 && v <= 30) return v;
       return 0;
     }
 
-    function openModal(force){
-      $("overlay").style.display = "flex";
-      $("modalHint").style.display = "none";
-      const current = ensureNowSection();
-      $("nowSectionInput").value = current ? String(current) : "";
-      if(force){
-        // zorunlu: arkaplana dokunarak kapatmayı engelliyoruz (zaten kapatma butonu yok)
-      }
-      $("nowSectionInput").focus();
-    }
-
-    function closeModal(){
-      $("overlay").style.display = "none";
-    }
-
-    function saveNowSectionFromModal(){
-      const v = parseInt($("nowSectionInput").value || "0", 10);
-      if(!(v >= 1 && v <= 30)){
-        $("modalHint").style.display = "block";
-        return;
-      }
-      localStorage.setItem("nowSection", String(v));
-      closeModal();
-      render();
-    }
-
     function render(){
-      const now = todayUTC();
+      const now = todayUTCStart();
       let diffDays = Math.floor((now - REF) / DAY);
       if(diffDays < 0) diffDays = 0;
 
-      const cycle = Math.floor(diffDays / 20);
-      const dayInCycle = diffDays % 20;
+      const cycle = Math.floor(diffDays / DAYS_PER_SECTION);             // kaçıncı 20 günlük blok
+      const cycleStart = REF + cycle * DAYS_PER_SECTION * DAY;           // bloğun başlangıcı
+      const cycleEnd = cycleStart + (DAYS_PER_SECTION - 1) * DAY;        // bloğun bitiş günü (görünen tarih)
 
-      const cycleStart = REF + cycle * 20 * DAY;
-      const cycleEnd = cycleStart + 19 * DAY;
+      $("today").textContent = fmtUTC(now);
+      $("end").textContent = fmtUTC(cycleEnd);
 
-      $("today").textContent = fmt(now);
-      $("end").textContent = fmt(cycleEnd);
-
-      /* Kullanıcı istediği gibi: bugünü sayma => 04->20 arası 16 */
-      const left = Math.max(0, Math.floor((cycleEnd - now) / DAY));
+      const left = Math.max(0, Math.floor((cycleEnd - now) / DAY));      // bugünü saymadan
       $("left").textContent = left + " gün";
 
-      const nowSection = ensureNowSection();
-      if(!nowSection){
-        openModal(true);
-        return;
-      }
+      const startSection = getStartSection();
+      const base = startSection ? (startSection - 1) : 0;
 
-      const startSection = getStartSectionFromNow(nowSection);
-      const sectionToday = wrapSection(startSection + cycle);
+      const requiredSection = ((base + cycle) % TOTAL) + 1;              // kişiye göre bölüm
+      const dayIn = diffDays % DAYS_PER_SECTION;
 
-      $("section").textContent = String(sectionToday);
+      let reqPage = (requiredSection - 1) * PAGES_PER_SECTION + dayIn + 1;
+      if(reqPage > LAST_PAGE) reqPage = LAST_PAGE;
 
-      const startPage = (sectionToday - 1) * PAGES_PER_SECTION + 1;
-      const endPage = Math.min(sectionToday * PAGES_PER_SECTION, LAST_PAGE);
+      $("section").textContent = requiredSection;
+
+      const startPage = (requiredSection - 1) * PAGES_PER_SECTION + 1;
+      let endPage = (requiredSection - 1) * PAGES_PER_SECTION + PAGES_PER_SECTION;
+      if(endPage > LAST_PAGE) endPage = LAST_PAGE;
       $("range").textContent = startPage + " – " + endPage;
 
-      let requiredPage = startPage + dayInCycle;
-      if(requiredPage > LAST_PAGE) requiredPage = LAST_PAGE;
-
-      const lastPage = parseInt(localStorage.getItem("lastPage") || "0", 10);
+      const last = parseInt(localStorage.getItem("lastPage") || "0", 10);
       const info = $("info");
 
-      if(lastPage >= 1 && lastPage <= LAST_PAGE){
-        const dp = lastPage - requiredPage;
+      if(last && Number.isFinite(last)){
+        const d = last - reqPage;
         info.style.display = "block";
-        if(dp > 0){
+        if(d > 0){
           info.className = "info ok";
-          info.textContent = dp + " sayfa ileridesin";
-        }else if(dp < 0){
+          info.textContent = d + " sayfa ileridesin";
+        }else if(d < 0){
           info.className = "info bad";
-          info.textContent = Math.abs(dp) + " sayfa geridesin";
+          info.textContent = Math.abs(d) + " sayfa geridesin";
         }else{
           info.className = "info neutral";
           info.textContent = "Tam yerindesin";
@@ -375,12 +279,12 @@
         info.style.display = "none";
       }
 
-      $("page").value = (lastPage >= 1 ? String(lastPage) : "");
+      $("page").value = last ? String(last) : "";
     }
 
     $("save").onclick = () => {
-      const v = parseInt($("page").value || "0", 10);
-      if(v >= 1 && v <= LAST_PAGE){
+      let v = parseInt($("page").value || "0", 10);
+      if(Number.isFinite(v) && v >= 1 && v <= LAST_PAGE){
         localStorage.setItem("lastPage", String(v));
       }
       render();
@@ -392,24 +296,20 @@
       localStorage.setItem("theme", isDark ? "dark" : "light");
     };
 
-    $("nowBtn").onclick = () => {
-      openModal(false);
-    };
-
-    $("modalSave").onclick = () => {
-      saveNowSectionFromModal();
+    $("curBtn").onclick = () => {
+      askCurrentSection(true);
+      render();
     };
 
     (function init(){
       const t = localStorage.getItem("theme") || "light";
       document.body.classList.add(t);
 
-      const nowSection = ensureNowSection();
-      if(!nowSection){
-        openModal(true);
-      }else{
-        render();
+      if(!getStartSection()){
+        askCurrentSection(true);  // ZORUNLU ilk açılış
       }
+
+      render();
     })();
   </script>
 </body>
