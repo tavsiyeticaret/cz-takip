@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>CZ TAKİP v60</title>
+<title>CZ TAKİP v50</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -77,6 +77,308 @@ body.dark{
 
 .card{
   background:var(--card);
+  border-radius:var(--radius-card);
+  padding:14px 16px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow);
+}
+
+.card h3{
+  font-size:18px;
+  margin-bottom:8px;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin-top:4px;
+}
+
+.label{color:var(--muted)}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:var(--radius-pill);
+  border:1px solid #cbd5f5;
+  font-size:18px;
+  text-align:center;
+  margin-top:6px;
+}
+
+.info{
+  margin-top:8px;
+  padding:8px 10px;
+  border-radius:12px;
+  font-weight:600;
+  display:none;
+}
+
+.ok{background:#e8ffe8;color:#16a34a}
+.bad{background:#ffe8e8;color:#dc2626}
+.neutral{background:#e8f0ff;color:#2563eb}
+
+.save{
+  width:100%;
+  margin-top:12px;
+  padding:14px;
+  border-radius:var(--radius-pill);
+  border:none;
+  font-size:18px;
+  font-weight:700;
+  background:linear-gradient(90deg,#2563eb,#1d4ed8);
+  color:#fff;
+}
+
+/* ZORUNLU MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(2,6,23,.72);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  padding:16px;
+}
+.modalBox{
+  width:100%;
+  max-width:420px;
+  background:var(--card);
+  color:var(--text);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+.modalTitle{
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:8px;
+}
+.modalNote{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.35;
+  margin-bottom:10px;
+}
+.modalBtn{
+  width:100%;
+  margin-top:10px;
+  padding:14px;
+  border-radius:var(--radius-pill);
+  border:none;
+  font-size:18px;
+  font-weight:800;
+  background:linear-gradient(90deg,#2563eb,#1d4ed8);
+  color:#fff;
+}
+.smallHint{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:8px;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+<div class="title">CZ TAKİP</div>
+<div class="subtitle">20 günde 1 bölüm · 30 bölümlü CZ döngüsü</div>
+
+<div class="top">
+  <button id="themeBtn" class="chip">🌙 Tema</button>
+  <button id="startBtn" class="chip">⚙ Şu anki bölüm</button>
+</div>
+
+<div class="card">
+  <h3>📅 Tarih & Süre</h3>
+  <div class="row"><span class="label">Bugün:</span><strong id="today"></strong></div>
+  <div class="row"><span class="label">Bitiş tarihi:</span><strong id="end"></strong></div>
+  <div class="row"><span class="label">Kalan gün:</span><strong id="left"></strong></div>
+</div>
+
+<div class="card">
+  <h3>📘 Bölüm Bilgisi</h3>
+  <div class="row"><span class="label">Olman gereken bölüm:</span><strong id="section"></strong></div>
+  <div class="row"><span class="label">Sayfa aralığı:</span><strong id="range"></strong></div>
+</div>
+
+<div class="card">
+  <h3>📖 Okuma Girişi</h3>
+  <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa">
+  <div id="info" class="info neutral"></div>
+  <button class="save" id="save">Kaydet</button>
+</div>
+
+<div class="modal" id="nowModal" aria-hidden="true">
+  <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="modalTitle" id="mTitle">Şu an okuduğun bölüm (zorunlu)</div>
+    <div class="modalNote">
+      Bu sisteme yeni geçiyoruz. 3 yıl önce hangi bölümden başladığını hatırlaman gerekmiyor.
+      <b>Sadece şu an okuduğun bölüm numarasını (1–30)</b> gir. Sistem seni otomatik hizalar.
+    </div>
+    <input id="nowInput" type="number" min="1" max="30" placeholder="Şu an okuduğun bölüm: 1–30">
+    <button class="modalBtn" id="nowSaveBtn">Kaydet</button>
+    <div class="smallHint">Not: Yanlış girersen sağ üstten istediğin zaman değiştirebilirsin.</div>
+  </div>
+</div>
+
+<script>
+const DAY=86400000;
+const REF=Date.UTC(2022,3,12);
+const TOTAL=30;
+const PER=20;
+const LAST=604;
+
+const $=id=>document.getElementById(id);
+
+function todayUTC(){
+  const d=new Date();
+  return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());
+}
+
+function fmt(u){
+  const d=new Date(u);
+  return String(d.getUTCDate()).padStart(2,"0")+"."+String(d.getUTCMonth()+1).padStart(2,"0")+"."+d.getUTCFullYear();
+}
+
+function openNowModal(preset){
+  const m=$("nowModal");
+  if(typeof preset==="number" && preset>=1 && preset<=30) $("nowInput").value=String(preset);
+  m.style.display="flex";
+  m.setAttribute("aria-hidden","false");
+  document.body.style.overflow="hidden";
+  setTimeout(()=>{$("nowInput").focus();},50);
+}
+
+function closeNowModal(){
+  const m=$("nowModal");
+  m.style.display="none";
+  m.setAttribute("aria-hidden","true");
+  document.body.style.overflow="";
+}
+
+function getCycle(nowUTC){
+  let diff=Math.floor((nowUTC-REF)/DAY);
+  if(diff<0) diff=0;
+  return Math.floor(diff/20);
+}
+
+function normalizeSection(n){
+  let x=n%TOTAL;
+  if(x<0) x+=TOTAL;
+  return x;
+}
+
+/* Kullanıcı "şu an okuduğu bölümü" girer -> start (ofset) otomatik hesaplanır */
+function setNowSection(nowSection){
+  const now=todayUTC();
+  const cycle=getCycle(now);
+  const start = normalizeSection((nowSection-1) - cycle) + 1;
+  localStorage.setItem("start", String(start));
+  localStorage.setItem("nowSection", String(nowSection));
+}
+
+function getStart(){
+  return parseInt(localStorage.getItem("start")||"0");
+}
+
+function getNowSection(){
+  return parseInt(localStorage.getItem("nowSection")||"0");
+}
+
+function saveNowFromModal(){
+  let v=parseInt(($("nowInput").value||"0").trim());
+  if(v>=1 && v<=30){
+    setNowSection(v);
+    closeNowModal();
+    render();
+  }else{
+    $("nowInput").value="";
+    $("nowInput").focus();
+  }
+}
+
+function render(){
+  const start=getStart();
+  if(!start){
+    openNowModal(getNowSection()||0);
+    return;
+  }
+
+  const last=parseInt(localStorage.getItem("last")||"0");
+  const now=todayUTC();
+  let diff=Math.floor((now-REF)/DAY);
+  if(diff<0)diff=0;
+
+  const cycle=Math.floor(diff/20);
+  const cycleEnd=REF+cycle*20*DAY+19*DAY;
+
+  $("today").textContent=fmt(now);
+  $("end").textContent=fmt(cycleEnd);
+
+  /* BUGÜN HARİÇ: +1 yok */
+  $("left").textContent=Math.max(0, Math.floor((cycleEnd - now) / DAY))+" gün";
+
+  const reqSection=((start-1+cycle)%TOTAL)+1;
+  const dayIn=diff%20;
+  let reqPage=(reqSection-1)*PER+dayIn+1;
+  if(reqPage>LAST)reqPage=LAST;
+
+  $("section").textContent=reqSection;
+  $("range").textContent=reqSection===30?"581 – 604":((reqSection-1)*20+1)+" – "+((reqSection-1)*20+20);
+
+  const info=$("info");
+  if(last){
+    const diffp=last-reqPage;
+    info.style.display="block";
+    if(diffp>0){info.className="info ok";info.textContent=diffp+" sayfa ileridesin";}
+    else if(diffp<0){info.className="info bad";info.textContent=Math.abs(diffp)+" sayfa geridesin";}
+    else{info.className="info neutral";info.textContent="Tam yerindesin";}
+  }else{
+    info.style.display="none";
+  }
+
+  $("page").value=last||"";
+}
+
+$("save").onclick=()=>{
+  let v=parseInt($("page").value||"0");
+  if(v>LAST)v=LAST;
+  if(v>0)localStorage.setItem("last",String(v));
+  render();
+};
+
+$("startBtn").onclick=()=>{
+  openNowModal(getNowSection()||0);
+};
+
+$("nowSaveBtn").onclick=saveNowFromModal;
+
+$("nowInput").addEventListener("keydown",(e)=>{
+  if(e.key==="Enter") saveNowFromModal();
+});
+
+$("themeBtn").onclick=()=>{
+  const d=document.body.classList.toggle("dark");
+  document.body.classList.toggle("light",!d);
+  localStorage.setItem("theme",d?"dark":"light");
+};
+
+document.addEventListener("DOMContentLoaded",()=>{
+  const t=localStorage.getItem("theme")||"light";
+  document.body.classList.add(t);
+
+  /* ZORUNLU: start yoksa anında modal aç */
+  if(!getStart()){
+    openNowModal(getNowSection()||0);
+  }
+
+  render();
+});
+</script>
+</body>
+</html>  background:var(--card);
   border-radius:var(--radius-card);
   padding:14px 16px;
   margin-bottom:12px;
