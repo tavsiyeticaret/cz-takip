@@ -1,596 +1,416 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>CZ TAKİP v50</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-
-:root{
-  --radius-card:18px;
-  --radius-pill:999px;
-  --shadow:0 10px 30px rgba(15,23,42,.15);
-}
-
-body{
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  padding:16px;
-  transition:.2s;
-}
-
-/* AÇIK TEMA */
-body.light{
-  --bg:#eef4ff;
-  --card:#fff;
-  --text:#111827;
-  --muted:#6b7280;
-  --accent:#2563eb;
-  --soft:#e5edff;
-  background:var(--bg);
-  color:var(--text);
-}
-
-/* KOYU TEMA */
-body.dark{
-  --bg:#020617;
-  --card:#0f172a;
-  --text:#e5e7eb;
-  --muted:#9ca3af;
-  --accent:#8b5cf6;
-  --soft:#1e293b;
-  background:radial-gradient(circle at top,#1e293b,#020617);
-  color:var(--text);
-}
-
-.title{
-  text-align:center;
-  font-size:32px;
-  font-weight:800;
-  letter-spacing:.12em;
-}
-
-.subtitle{
-  text-align:center;
-  font-size:13px;
-  color:var(--muted);
-  margin-bottom:16px;
-}
-
-.top{
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
-  margin-bottom:14px;
-}
-
-.chip{
-  border-radius:var(--radius-pill);
-  padding:8px 14px;
-  border:none;
-  background:var(--soft);
-  color:var(--accent);
-  font-weight:600;
-  cursor:pointer;
-}
-
-.card{
-  background:var(--card);
-  border-radius:var(--radius-card);
-  padding:14px 16px;
-  margin-bottom:12px;
-  box-shadow:var(--shadow);
-}
-
-.card h3{
-  font-size:18px;
-  margin-bottom:8px;
-}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-  margin-top:4px;
-}
-
-.label{color:var(--muted)}
-
-input{
-  width:100%;
-  padding:12px;
-  border-radius:var(--radius-pill);
-  border:1px solid #cbd5f5;
-  font-size:18px;
-  text-align:center;
-  margin-top:6px;
-}
-
-.info{
-  margin-top:8px;
-  padding:8px 10px;
-  border-radius:12px;
-  font-weight:600;
-  display:none;
-}
-
-.ok{background:#e8ffe8;color:#16a34a}
-.bad{background:#ffe8e8;color:#dc2626}
-.neutral{background:#e8f0ff;color:#2563eb}
-
-.save{
-  width:100%;
-  margin-top:12px;
-  padding:14px;
-  border-radius:var(--radius-pill);
-  border:none;
-  font-size:18px;
-  font-weight:700;
-  background:linear-gradient(90deg,#2563eb,#1d4ed8);
-  color:#fff;
-}
-
-/* ZORUNLU MODAL */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(2,6,23,.72);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-  padding:16px;
-}
-.modalBox{
-  width:100%;
-  max-width:420px;
-  background:var(--card);
-  color:var(--text);
-  border-radius:18px;
-  padding:16px;
-  box-shadow:var(--shadow);
-}
-.modalTitle{
-  font-size:18px;
-  font-weight:800;
-  margin-bottom:8px;
-}
-.modalNote{
-  font-size:13px;
-  color:var(--muted);
-  line-height:1.35;
-  margin-bottom:10px;
-}
-.modalBtn{
-  width:100%;
-  margin-top:10px;
-  padding:14px;
-  border-radius:var(--radius-pill);
-  border:none;
-  font-size:18px;
-  font-weight:800;
-  background:linear-gradient(90deg,#2563eb,#1d4ed8);
-  color:#fff;
-}
-.smallHint{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:8px;
-  text-align:center;
-}
-</style>
-</head>
-
-<body>
-<div class="title">CZ TAKİP</div>
-<div class="subtitle">20 günde 1 bölüm · 30 bölümlü CZ döngüsü</div>
-
-<div class="top">
-  <button id="themeBtn" class="chip">🌙 Tema</button>
-  <button id="startBtn" class="chip">⚙ Şu anki bölüm</button>
-</div>
-
-<div class="card">
-  <h3>📅 Tarih & Süre</h3>
-  <div class="row"><span class="label">Bugün:</span><strong id="today"></strong></div>
-  <div class="row"><span class="label">Bitiş tarihi:</span><strong id="end"></strong></div>
-  <div class="row"><span class="label">Kalan gün:</span><strong id="left"></strong></div>
-</div>
-
-<div class="card">
-  <h3>📘 Bölüm Bilgisi</h3>
-  <div class="row"><span class="label">Olman gereken bölüm:</span><strong id="section"></strong></div>
-  <div class="row"><span class="label">Sayfa aralığı:</span><strong id="range"></strong></div>
-</div>
-
-<div class="card">
-  <h3>📖 Okuma Girişi</h3>
-  <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa">
-  <div id="info" class="info neutral"></div>
-  <button class="save" id="save">Kaydet</button>
-</div>
-
-<div class="modal" id="nowModal" aria-hidden="true">
-  <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="mTitle">
-    <div class="modalTitle" id="mTitle">Şu an okuduğun bölüm (zorunlu)</div>
-    <div class="modalNote">
-      Bu sisteme yeni geçiyoruz. 3 yıl önce hangi bölümden başladığını hatırlaman gerekmiyor.
-      <b>Sadece şu an okuduğun bölüm numarasını (1–30)</b> gir. Sistem seni otomatik hizalar.
-    </div>
-    <input id="nowInput" type="number" min="1" max="30" placeholder="Şu an okuduğun bölüm: 1–30">
-    <button class="modalBtn" id="nowSaveBtn">Kaydet</button>
-    <div class="smallHint">Not: Yanlış girersen sağ üstten istediğin zaman değiştirebilirsin.</div>
-  </div>
-</div>
-
-<script>
-const DAY=86400000;
-const REF=Date.UTC(2022,3,12);
-const TOTAL=30;
-const PER=20;
-const LAST=604;
-
-const $=id=>document.getElementById(id);
-
-function todayUTC(){
-  const d=new Date();
-  return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());
-}
-
-function fmt(u){
-  const d=new Date(u);
-  return String(d.getUTCDate()).padStart(2,"0")+"."+String(d.getUTCMonth()+1).padStart(2,"0")+"."+d.getUTCFullYear();
-}
-
-function openNowModal(preset){
-  const m=$("nowModal");
-  if(typeof preset==="number" && preset>=1 && preset<=30) $("nowInput").value=String(preset);
-  m.style.display="flex";
-  m.setAttribute("aria-hidden","false");
-  document.body.style.overflow="hidden";
-  setTimeout(()=>{$("nowInput").focus();},50);
-}
-
-function closeNowModal(){
-  const m=$("nowModal");
-  m.style.display="none";
-  m.setAttribute("aria-hidden","true");
-  document.body.style.overflow="";
-}
-
-function getCycle(nowUTC){
-  let diff=Math.floor((nowUTC-REF)/DAY);
-  if(diff<0) diff=0;
-  return Math.floor(diff/20);
-}
-
-function normalizeSection(n){
-  let x=n%TOTAL;
-  if(x<0) x+=TOTAL;
-  return x;
-}
-
-/* Kullanıcı "şu an okuduğu bölümü" girer -> start (ofset) otomatik hesaplanır */
-function setNowSection(nowSection){
-  const now=todayUTC();
-  const cycle=getCycle(now);
-  const start = normalizeSection((nowSection-1) - cycle) + 1;
-  localStorage.setItem("start", String(start));
-  localStorage.setItem("nowSection", String(nowSection));
-}
-
-function getStart(){
-  return parseInt(localStorage.getItem("start")||"0");
-}
-
-function getNowSection(){
-  return parseInt(localStorage.getItem("nowSection")||"0");
-}
-
-function saveNowFromModal(){
-  let v=parseInt(($("nowInput").value||"0").trim());
-  if(v>=1 && v<=30){
-    setNowSection(v);
-    closeNowModal();
-    render();
-  }else{
-    $("nowInput").value="";
-    $("nowInput").focus();
-  }
-}
-
-function render(){
-  const start=getStart();
-  if(!start){
-    openNowModal(getNowSection()||0);
-    return;
-  }
-
-  const last=parseInt(localStorage.getItem("last")||"0");
-  const now=todayUTC();
-  let diff=Math.floor((now-REF)/DAY);
-  if(diff<0)diff=0;
-
-  const cycle=Math.floor(diff/20);
-  const cycleEnd=REF+cycle*20*DAY+19*DAY;
-
-  $("today").textContent=fmt(now);
-  $("end").textContent=fmt(cycleEnd);
-
-  /* BUGÜN HARİÇ: +1 yok */
-  $("left").textContent=Math.max(0, Math.floor((cycleEnd - now) / DAY))+" gün";
-
-  const reqSection=((start-1+cycle)%TOTAL)+1;
-  const dayIn=diff%20;
-  let reqPage=(reqSection-1)*PER+dayIn+1;
-  if(reqPage>LAST)reqPage=LAST;
-
-  $("section").textContent=reqSection;
-  $("range").textContent=reqSection===30?"581 – 604":((reqSection-1)*20+1)+" – "+((reqSection-1)*20+20);
-
-  const info=$("info");
-  if(last){
-    const diffp=last-reqPage;
-    info.style.display="block";
-    if(diffp>0){info.className="info ok";info.textContent=diffp+" sayfa ileridesin";}
-    else if(diffp<0){info.className="info bad";info.textContent=Math.abs(diffp)+" sayfa geridesin";}
-    else{info.className="info neutral";info.textContent="Tam yerindesin";}
-  }else{
-    info.style.display="none";
-  }
-
-  $("page").value=last||"";
-}
-
-$("save").onclick=()=>{
-  let v=parseInt($("page").value||"0");
-  if(v>LAST)v=LAST;
-  if(v>0)localStorage.setItem("last",String(v));
-  render();
-};
-
-$("startBtn").onclick=()=>{
-  openNowModal(getNowSection()||0);
-};
-
-$("nowSaveBtn").onclick=saveNowFromModal;
-
-$("nowInput").addEventListener("keydown",(e)=>{
-  if(e.key==="Enter") saveNowFromModal();
-});
-
-$("themeBtn").onclick=()=>{
-  const d=document.body.classList.toggle("dark");
-  document.body.classList.toggle("light",!d);
-  localStorage.setItem("theme",d?"dark":"light");
-};
-
-document.addEventListener("DOMContentLoaded",()=>{
-  const t=localStorage.getItem("theme")||"light";
-  document.body.classList.add(t);
-
-  /* ZORUNLU: start yoksa anında modal aç */
-  if(!getStart()){
-    openNowModal(getNowSection()||0);
-  }
-
-  render();
-});
-</script>
-</body>
-</html>  background:var(--card);
-  border-radius:var(--radius-card);
-  padding:14px 16px;
-  margin-bottom:12px;
-  box-shadow:var(--shadow);
-}
-
-.card h3{
-  font-size:18px;
-  margin-bottom:8px;
-}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-  margin-top:4px;
-}
-
-.label{color:var(--muted)}
-
-input{
-  width:100%;
-  padding:12px;
-  border-radius:var(--radius-pill);
-  border:1px solid #cbd5f5;
-  font-size:18px;
-  text-align:center;
-  margin-top:6px;
-}
-
-.info{
-  margin-top:8px;
-  padding:8px 10px;
-  border-radius:12px;
-  font-weight:600;
-  display:none;
-}
-
-.ok{background:#e8ffe8;color:#16a34a}
-.bad{background:#ffe8e8;color:#dc2626}
-.neutral{background:#e8f0ff;color:#2563eb}
-
-.save{
-  width:100%;
-  margin-top:12px;
-  padding:14px;
-  border-radius:var(--radius-pill);
-  border:none;
-  font-size:18px;
-  font-weight:700;
-  background:linear-gradient(90deg,#2563eb,#1d4ed8);
-  color:#fff;
-}
-</style>
-</head>
-
-<body>
-<div class="title">CZ TAKİP</div>
-<div class="subtitle">20 günde 1 bölüm · 30 bölümlü CZ döngüsü</div>
-
-<div class="top">
-  <button id="themeBtn" class="chip">🌙 Koyu tema</button>
-  <button id="startBtn" class="chip">⚙ Başlangıç bölümü</button>
-</div>
-
-<div class="card">
-  <h3>📅 Tarih & Süre</h3>
-  <div class="row"><span class="label">Bugün:</span><strong id="today"></strong></div>
-  <div class="row"><span class="label">Bitiş tarihi:</span><strong id="end"></strong></div>
-  <div class="row"><span class="label">Kalan gün:</span><strong id="left"></strong></div>
-</div>
-
-<div class="card">
-  <h3>📘 Bölüm Bilgisi</h3>
-  <div class="row"><span class="label">Olman gereken bölüm:</span><strong id="section"></strong></div>
-  <div class="row"><span class="label">Sayfa aralığı:</span><strong id="range"></strong></div>
-</div>
-
-<div class="card">
-  <h3>📖 Okuma Girişi</h3>
-  <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa">
-  <div id="info" class="info neutral"></div>
-  <button class="save" id="save">Kaydet</button>
-</div>
-
-<script>
-/* === SİSTEM SABİTLERİ (DEĞİŞMEZ) === */
-const DAY = 86400000;
-const REF = Date.UTC(2022,3,12); // Ortak sistem başlangıcı
-const TOTAL = 30;
-const PER = 20;
-const LAST = 604;
-const VERSION = 60;
-
-const $ = id => document.getElementById(id);
-
-/* === GÜVENLİ STATE YÖNETİMİ === */
-function loadState(){
-  try{
-    const raw = localStorage.getItem("cz_state");
-    if(!raw) throw "empty";
-    const s = JSON.parse(raw);
-    if(s.version !== VERSION) throw "version";
-    return s;
-  }catch{
-    const fresh = {
-      version: VERSION,
-      start: 1,
-      last: 0
-    };
-    localStorage.setItem("cz_state", JSON.stringify(fresh));
-    return fresh;
-  }
-}
-
-function saveState(s){
-  localStorage.setItem("cz_state", JSON.stringify(s));
-}
-
-/* === TARİH FONKSİYONLARI === */
-function todayUTC(){
-  const d = new Date();
-  return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
-}
-
-function fmt(u){
-  const d = new Date(u);
-  return String(d.getUTCDate()).padStart(2,"0")+"."+
-         String(d.getUTCMonth()+1).padStart(2,"0")+"."+
-         d.getUTCFullYear();
-}
-
-/* === ANA RENDER === */
-function render(){
-  const s = loadState();
-  const now = todayUTC();
-
-  let diff = Math.floor((now - REF) / DAY);
-  if(diff < 0) diff = 0;
-
-  const cycle = Math.floor(diff / PER);
-  const cycleEnd = REF + cycle*PER*DAY + (PER-1)*DAY;
-
-  $("today").textContent = fmt(now);
-  $("end").textContent = fmt(cycleEnd);
-  $("left").textContent =
-    Math.max(0, Math.floor((cycleEnd-now)/DAY)+1) + " gün";
-
-  const reqSection = ((s.start - 1 + cycle) % TOTAL) + 1;
-  const dayIn = diff % PER;
-
-  let reqPage = (reqSection - 1) * PER + dayIn + 1;
-  if(reqPage > LAST) reqPage = LAST;
-
-  $("section").textContent = reqSection;
-  $("range").textContent =
-    reqSection === 30 ? "581 – 604"
-    : ((reqSection-1)*20+1) + " – " + ((reqSection-1)*20+20);
-
-  const info = $("info");
-  if(s.last){
-    const d = s.last - reqPage;
-    info.style.display = "block";
-    if(d > 0){
-      info.className = "info ok";
-      info.textContent = d + " sayfa ileridesin";
-    }else if(d < 0){
-      info.className = "info bad";
-      info.textContent = Math.abs(d) + " sayfa geridesin";
-    }else{
-      info.className = "info neutral";
-      info.textContent = "Tam yerindesin";
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CZ TAKİP</title>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --radius-card:18px;
+      --radius-pill:999px;
+      --shadow:0 10px 30px rgba(15,23,42,.15);
+      --focus:0 0 0 3px rgba(37,99,235,.25);
     }
-  }else{
-    info.style.display = "none";
-  }
 
-  $("page").value = s.last || "";
-}
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      padding:16px;
+      transition:.2s;
+      min-height:100vh;
+    }
 
-/* === EVENTLER === */
-$("save").onclick = () => {
-  const s = loadState();
-  let v = parseInt($("page").value, 10);
-  if(Number.isNaN(v) || v <= 0) return;
-  if(v > LAST) v = LAST;
-  s.last = v;
-  saveState(s);
-  render();
-};
+    body.light{
+      --bg:#eef4ff;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --soft:#e5edff;
+      background:var(--bg);
+      color:var(--text);
+    }
 
-$("startBtn").onclick = () => {
-  const s = loadState();
-  let n = parseInt(prompt("Başlangıç bölümü (1–30):", s.start), 10);
-  if(n >= 1 && n <= 30){
-    s.start = n;
-    saveState(s);
-    render();
-  }
-};
+    body.dark{
+      --bg:#020617;
+      --card:#0f172a;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#8b5cf6;
+      --soft:#1e293b;
+      background:radial-gradient(circle at top,#1e293b,#020617);
+      color:var(--text);
+    }
 
-$("themeBtn").onclick = () => {
-  const dark = document.body.classList.toggle("dark");
-  document.body.classList.toggle("light", !dark);
-  localStorage.setItem("theme", dark ? "dark" : "light");
-};
+    .title{
+      text-align:center;
+      font-size:32px;
+      font-weight:800;
+      letter-spacing:.12em;
+      margin-top:6px;
+    }
+    .subtitle{
+      text-align:center;
+      font-size:13px;
+      color:var(--muted);
+      margin:10px 0 16px;
+    }
 
-/* === INIT === */
-(function init(){
-  const t = localStorage.getItem("theme") || "light";
-  document.body.classList.add(t);
-  render();
-})();
-</script>
+    .top{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:14px;
+    }
+    .chip{
+      flex:1;
+      border-radius:var(--radius-pill);
+      padding:10px 14px;
+      border:none;
+      background:var(--soft);
+      color:var(--accent);
+      font-weight:700;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius-card);
+      padding:14px 16px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+    }
+    .card h3{
+      font-size:18px;
+      margin-bottom:10px;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      margin-top:6px;
+      align-items:center;
+    }
+    .label{color:var(--muted)}
+    .value{font-weight:800}
+
+    input{
+      width:100%;
+      padding:12px;
+      border-radius:var(--radius-pill);
+      border:1px solid #cbd5f5;
+      font-size:18px;
+      text-align:center;
+      margin-top:8px;
+      outline:none;
+    }
+    input:focus{box-shadow:var(--focus);border-color:#93c5fd}
+
+    .info{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:800;
+      display:none;
+    }
+    .ok{background:#e8ffe8;color:#16a34a}
+    .bad{background:#ffe8e8;color:#dc2626}
+    .neutral{background:#e8f0ff;color:#2563eb}
+
+    .save{
+      width:100%;
+      margin-top:12px;
+      padding:14px;
+      border-radius:var(--radius-pill);
+      border:none;
+      font-size:18px;
+      font-weight:900;
+      background:linear-gradient(90deg,#2563eb,#1d4ed8);
+      color:#fff;
+      cursor:pointer;
+    }
+
+    /* ZORUNLU MODAL */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:9999;
+    }
+    .modal{
+      width:min(520px,100%);
+      background:var(--card);
+      color:var(--text);
+      border-radius:22px;
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
+      padding:16px;
+    }
+    .modal h4{
+      font-size:18px;
+      margin-bottom:8px;
+    }
+    .modal p{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.4;
+      margin-bottom:10px;
+    }
+    .modal .note{
+      background:var(--soft);
+      border-radius:14px;
+      padding:10px 12px;
+      margin:10px 0 12px;
+      color:var(--text);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .modal .actions{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+    }
+    .modal .actions button{
+      flex:1;
+      border:none;
+      border-radius:var(--radius-pill);
+      padding:12px 14px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btn-primary{
+      background:var(--accent);
+      color:#fff;
+    }
+    .hint{
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted);
+      text-align:center;
+      display:none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="title">CZ TAKİP</div>
+  <div class="subtitle">20 günde 1 bölüm · 30 bölümlü CZ döngüsü</div>
+
+  <div class="top">
+    <button id="themeBtn" class="chip">🌙 Tema</button>
+    <button id="nowBtn" class="chip">⚙️ Şu anki bölüm</button>
+  </div>
+
+  <div class="card">
+    <h3>📅 Tarih & Süre</h3>
+    <div class="row"><span class="label">Bugün:</span><span class="value" id="today"></span></div>
+    <div class="row"><span class="label">Bitiş tarihi:</span><span class="value" id="end"></span></div>
+    <div class="row"><span class="label">Kalan gün:</span><span class="value" id="left"></span></div>
+  </div>
+
+  <div class="card">
+    <h3>📘 Bölüm Bilgisi</h3>
+    <div class="row"><span class="label">Olman gereken bölüm:</span><span class="value" id="section"></span></div>
+    <div class="row"><span class="label">Sayfa aralığı:</span><span class="value" id="range"></span></div>
+  </div>
+
+  <div class="card">
+    <h3>📖 Okuma Girişi</h3>
+    <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa">
+    <div id="info" class="info neutral"></div>
+    <button class="save" id="save">Kaydet</button>
+  </div>
+
+  <!-- ZORUNLU MODAL -->
+  <div id="overlay" class="overlay">
+    <div class="modal">
+      <h4>Şu an hangi bölümdesin? (1–30)</h4>
+      <p>Bu bilgi ilk kurulum için zorunlu. Daha sonra sağ üstten tekrar değiştirilebilir: “⚙️ Şu anki bölüm”.</p>
+
+      <div class="note">
+        Not: Sisteme geçerken ilk başladığın bölümü hatırlamıyorsan, şu anki bölümünün <b>7 eksiğini</b> başlangıç kabul ediyoruz.<br>
+        Örnek 1: Şu an 8. bölüm → Başlangıç 1<br>
+        Örnek 2: Şu an 5. bölüm → Başlangıç 29
+      </div>
+
+      <input id="nowSectionInput" type="number" min="1" max="30" placeholder="Örn: 8">
+      <div id="modalHint" class="hint">Lütfen 1 ile 30 arasında bir sayı gir.</div>
+
+      <div class="actions">
+        <button id="modalSave" class="btn-primary">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DAY = 86400000;
+
+    /* Döngü referansı: 01.01.2026 => 20 günlük periyotların sonu 20.01.2026, 09.02.2026 ... */
+    const REF = Date.UTC(2026, 0, 1);
+
+    const TOTAL_SECTIONS = 30;
+    const PAGES_PER_SECTION = 20;
+    const LAST_PAGE = 604;
+    const OFFSET_FOR_START = 7; // şu anki bölümün 7 eksiği başlangıç kabulü
+
+    const $ = (id) => document.getElementById(id);
+
+    function todayUTC(){
+      const d = new Date();
+      return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function fmt(u){
+      const d = new Date(u);
+      const dd = String(d.getUTCDate()).padStart(2,"0");
+      const mm = String(d.getUTCMonth()+1).padStart(2,"0");
+      const yy = d.getUTCFullYear();
+      return dd+"."+mm+"."+yy;
+    }
+
+    function wrapSection(n){
+      let x = ((n - 1) % TOTAL_SECTIONS);
+      if(x < 0) x += TOTAL_SECTIONS;
+      return x + 1;
+    }
+
+    function getStartSectionFromNow(nowSection){
+      return wrapSection(nowSection - OFFSET_FOR_START);
+    }
+
+    function ensureNowSection(){
+      const saved = parseInt(localStorage.getItem("nowSection") || "0", 10);
+      if(saved >= 1 && saved <= 30) return saved;
+      return 0;
+    }
+
+    function openModal(force){
+      $("overlay").style.display = "flex";
+      $("modalHint").style.display = "none";
+      const current = ensureNowSection();
+      $("nowSectionInput").value = current ? String(current) : "";
+      if(force){
+        // zorunlu: arkaplana dokunarak kapatmayı engelliyoruz (zaten kapatma butonu yok)
+      }
+      $("nowSectionInput").focus();
+    }
+
+    function closeModal(){
+      $("overlay").style.display = "none";
+    }
+
+    function saveNowSectionFromModal(){
+      const v = parseInt($("nowSectionInput").value || "0", 10);
+      if(!(v >= 1 && v <= 30)){
+        $("modalHint").style.display = "block";
+        return;
+      }
+      localStorage.setItem("nowSection", String(v));
+      closeModal();
+      render();
+    }
+
+    function render(){
+      const now = todayUTC();
+      let diffDays = Math.floor((now - REF) / DAY);
+      if(diffDays < 0) diffDays = 0;
+
+      const cycle = Math.floor(diffDays / 20);
+      const dayInCycle = diffDays % 20;
+
+      const cycleStart = REF + cycle * 20 * DAY;
+      const cycleEnd = cycleStart + 19 * DAY;
+
+      $("today").textContent = fmt(now);
+      $("end").textContent = fmt(cycleEnd);
+
+      /* Kullanıcı istediği gibi: bugünü sayma => 04->20 arası 16 */
+      const left = Math.max(0, Math.floor((cycleEnd - now) / DAY));
+      $("left").textContent = left + " gün";
+
+      const nowSection = ensureNowSection();
+      if(!nowSection){
+        openModal(true);
+        return;
+      }
+
+      const startSection = getStartSectionFromNow(nowSection);
+      const sectionToday = wrapSection(startSection + cycle);
+
+      $("section").textContent = String(sectionToday);
+
+      const startPage = (sectionToday - 1) * PAGES_PER_SECTION + 1;
+      const endPage = Math.min(sectionToday * PAGES_PER_SECTION, LAST_PAGE);
+      $("range").textContent = startPage + " – " + endPage;
+
+      let requiredPage = startPage + dayInCycle;
+      if(requiredPage > LAST_PAGE) requiredPage = LAST_PAGE;
+
+      const lastPage = parseInt(localStorage.getItem("lastPage") || "0", 10);
+      const info = $("info");
+
+      if(lastPage >= 1 && lastPage <= LAST_PAGE){
+        const dp = lastPage - requiredPage;
+        info.style.display = "block";
+        if(dp > 0){
+          info.className = "info ok";
+          info.textContent = dp + " sayfa ileridesin";
+        }else if(dp < 0){
+          info.className = "info bad";
+          info.textContent = Math.abs(dp) + " sayfa geridesin";
+        }else{
+          info.className = "info neutral";
+          info.textContent = "Tam yerindesin";
+        }
+      }else{
+        info.style.display = "none";
+      }
+
+      $("page").value = (lastPage >= 1 ? String(lastPage) : "");
+    }
+
+    $("save").onclick = () => {
+      const v = parseInt($("page").value || "0", 10);
+      if(v >= 1 && v <= LAST_PAGE){
+        localStorage.setItem("lastPage", String(v));
+      }
+      render();
+    };
+
+    $("themeBtn").onclick = () => {
+      const isDark = document.body.classList.toggle("dark");
+      document.body.classList.toggle("light", !isDark);
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    };
+
+    $("nowBtn").onclick = () => {
+      openModal(false);
+    };
+
+    $("modalSave").onclick = () => {
+      saveNowSectionFromModal();
+    };
+
+    (function init(){
+      const t = localStorage.getItem("theme") || "light";
+      document.body.classList.add(t);
+
+      const nowSection = ensureNowSection();
+      if(!nowSection){
+        openModal(true);
+      }else{
+        render();
+      }
+    })();
+  </script>
 </body>
 </html>
