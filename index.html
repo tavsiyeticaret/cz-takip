@@ -4,13 +4,16 @@
   <meta charset="UTF-8" />
   <title>CZ TAKİP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
+
     :root{
       --radius-card:18px;
       --radius-pill:999px;
       --shadow:0 10px 30px rgba(15,23,42,.15);
     }
+
     body{
       font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
       padding:16px;
@@ -44,13 +47,13 @@
       font-size:32px;
       font-weight:800;
       letter-spacing:.12em;
-      margin-top:2px;
     }
+
     .subtitle{
       text-align:center;
       font-size:13px;
       color:var(--muted);
-      margin:6px 0 14px;
+      margin-bottom:16px;
     }
 
     .top{
@@ -62,7 +65,7 @@
 
     .chip{
       border-radius:var(--radius-pill);
-      padding:10px 14px;
+      padding:8px 14px;
       border:none;
       background:var(--soft);
       color:var(--accent);
@@ -71,6 +74,7 @@
       display:flex;
       align-items:center;
       gap:8px;
+      white-space:nowrap;
     }
 
     .card{
@@ -80,6 +84,7 @@
       margin-bottom:12px;
       box-shadow:var(--shadow);
     }
+
     .card h3{
       font-size:18px;
       margin-bottom:8px;
@@ -91,7 +96,9 @@
       margin-top:4px;
       gap:12px;
     }
+
     .label{color:var(--muted)}
+    .value{font-weight:800}
 
     input{
       width:100%;
@@ -106,12 +113,13 @@
     }
 
     .info{
-      margin-top:10px;
+      margin-top:8px;
       padding:10px 12px;
       border-radius:12px;
       font-weight:800;
       display:none;
     }
+
     .ok{background:#e8ffe8;color:#16a34a}
     .bad{background:#ffe8e8;color:#dc2626}
     .neutral{background:#e8f0ff;color:#2563eb}
@@ -123,16 +131,20 @@
       border-radius:var(--radius-pill);
       border:none;
       font-size:18px;
-      font-weight:800;
+      font-weight:900;
       background:linear-gradient(90deg,#2563eb,#1d4ed8);
       color:#fff;
       cursor:pointer;
     }
 
-    .hint{
+    body.dark .save{
+      background:linear-gradient(90deg,#8b5cf6,#6d28d9);
+    }
+
+    .note{
+      margin-top:10px;
       font-size:12px;
       color:var(--muted);
-      margin-top:8px;
       line-height:1.35;
     }
   </style>
@@ -144,51 +156,50 @@
 
   <div class="top">
     <button id="themeBtn" class="chip">🌙 Tema</button>
-    <button id="curBtn" class="chip">⚙️ Şu anki bölüm</button>
+    <button id="setNowBtn" class="chip">⚙️ Şu anki bölüm</button>
   </div>
 
   <div class="card">
     <h3>📅 Tarih & Süre</h3>
-    <div class="row"><span class="label">Bugün:</span><strong id="today"></strong></div>
-    <div class="row"><span class="label">Bitiş tarihi:</span><strong id="end"></strong></div>
-    <div class="row"><span class="label">Kalan gün:</span><strong id="left"></strong></div>
+    <div class="row"><span class="label">Bugün:</span><span class="value" id="today"></span></div>
+    <div class="row"><span class="label">Bitiş tarihi:</span><span class="value" id="end"></span></div>
+    <div class="row"><span class="label">Kalan gün:</span><span class="value" id="left"></span></div>
   </div>
 
   <div class="card">
     <h3>📘 Bölüm Bilgisi</h3>
-    <div class="row"><span class="label">Olman gereken bölüm:</span><strong id="section"></strong></div>
-    <div class="row"><span class="label">Sayfa aralığı:</span><strong id="range"></strong></div>
+    <div class="row"><span class="label">Olman gereken bölüm:</span><span class="value" id="section"></span></div>
+    <div class="row"><span class="label">Sayfa aralığı:</span><span class="value" id="range"></span></div>
   </div>
 
   <div class="card">
     <h3>📖 Okuma Girişi</h3>
-    <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa" />
+    <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa">
     <div id="info" class="info neutral"></div>
     <button class="save" id="save">Kaydet</button>
-    <div class="hint">
-      Not: Bu sisteme geçerken herkes 3 yıl önceki ilk bölümünü hatırlamayabilir.
-      İlk açılışta sadece “Şu anki bölüm”ünü gir. Sistem otomatik olarak “başlangıç bölümünü” (şu anki bölüm − 7) şeklinde hesaplar.
-      Sonradan sağ üstten tekrar değiştirilebilir.
+
+    <div class="note" id="note">
+      Not: Sisteme ilk kez geçerken “Şu anki bölüm” biliniyorsa onu gir.
+      Eğer sadece “Şu anki bölümün” var ama ilk başladığın bölümü hatırlamıyorsan, ekip içi WhatsApp notuna bak.
     </div>
   </div>
 
   <script>
     const DAY = 86400000;
 
-    const REF = Date.UTC(2026, 0, 1);     // 01.01.2026 UTC
-    const TOTAL = 30;                    // 30 bölüm
-    const DAYS_PER_SECTION = 20;         // 20 gün
-    const PAGES_PER_SECTION = 20;        // 20 sayfa
-    const LAST_PAGE = 604;
+    const REF  = Date.UTC(2022,3,12); // referans başlangıç (değiştirme)
+    const TOTAL = 30;
+    const PER = 20;
+    const LAST = 604;
 
     const $ = (id) => document.getElementById(id);
 
-    function todayUTCStart(){
+    function todayUTC(){
       const d = new Date();
       return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
     }
 
-    function fmtUTC(u){
+    function fmt(u){
       const d = new Date(u);
       const dd = String(d.getUTCDate()).padStart(2,"0");
       const mm = String(d.getUTCMonth()+1).padStart(2,"0");
@@ -196,81 +207,109 @@
       return dd + "." + mm + "." + yy;
     }
 
-    function wrapSection(n){
-      let x = n % TOTAL;
-      if(x <= 0) x += TOTAL;
-      return x;
+    function clampSection(n){
+      const v = parseInt(n,10);
+      if(!Number.isFinite(v)) return null;
+      if(v < 1 || v > TOTAL) return null;
+      return v;
     }
 
-    function askCurrentSection(force){
-      const already = localStorage.getItem("startSection");
-      if(already && !force) return;
+    function computeBase(nowUTC){
+      let diff = Math.floor((nowUTC - REF)/DAY);
+      if(diff < 0) diff = 0;
 
-      let cur = prompt(
-        "Şu an hangi bölümdesin? (1–30)\n\nSistem otomatik hesaplar:\nBaşlangıç = (Şu anki bölüm − 7)\nÖrnek: 8 → 1, 5 → 28"
-      );
+      const cycle = Math.floor(diff / 20);
+      const dayIn = diff % 20;
 
-      if(cur === null) return;
+      const baseSection = (cycle % TOTAL) + 1;  // 1..30
+      const baseDayIn = dayIn;                 // 0..19
 
-      cur = parseInt(cur,10);
-      if(!Number.isFinite(cur) || cur < 1 || cur > 30){
-        alert("Lütfen 1 ile 30 arasında bir bölüm gir.");
-        return askCurrentSection(true);
+      const cycleEnd = REF + cycle*20*DAY + 19*DAY;
+
+      return { diff, cycle, dayIn: baseDayIn, baseSection, cycleEnd };
+    }
+
+    function getDelta(){
+      const raw = localStorage.getItem("delta");
+      const v = parseInt(raw,10);
+      if(!Number.isFinite(v)) return null;
+      if(v < 0 || v >= TOTAL) return null;
+      return v;
+    }
+
+    function requireSetupIfMissing(){
+      const d = getDelta();
+      if(d === null){
+        askCurrentSection(true);
+      }
+    }
+
+    function askCurrentSection(isMandatory){
+      const now = todayUTC();
+      const base = computeBase(now).baseSection;
+
+      const msg =
+        "Şu anki bölümün (1-30):\n\n" +
+        "Not: Bugün sistemin baz bölümü = " + base + ".\n" +
+        "Girdiğin bölüm, bundan sonraki hesaplamayı sana göre ayarlar.";
+
+      let input = prompt(msg, "");
+      if(input === null){
+        if(isMandatory){
+          alert("Devam etmek için bir kez 'Şu anki bölüm' girmelisin.");
+          return askCurrentSection(true);
+        }
+        return;
       }
 
-      const start = wrapSection(cur - 7);
-      localStorage.setItem("startSection", String(start));
+      const userSection = clampSection(input);
+      if(userSection === null){
+        alert("Lütfen 1 ile 30 arasında bir sayı gir.");
+        return askCurrentSection(isMandatory);
+      }
+
+      const delta = (userSection - base + TOTAL) % TOTAL; // DOĞRU yön
+      localStorage.setItem("delta", String(delta));
+      render();
     }
 
-    function getStartSection(){
-      const v = parseInt(localStorage.getItem("startSection") || "0", 10);
-      if(Number.isFinite(v) && v >= 1 && v <= 30) return v;
-      return 0;
+    function sectionToRange(section){
+      const start = (section - 1) * PER + 1;
+      const end = Math.min(section * PER, LAST);
+      return start + " – " + end;
     }
 
     function render(){
-      const now = todayUTCStart();
-      let diffDays = Math.floor((now - REF) / DAY);
-      if(diffDays < 0) diffDays = 0;
+      const lastPage = parseInt(localStorage.getItem("last") || "0", 10);
+      const now = todayUTC();
+      const base = computeBase(now);
 
-      const cycle = Math.floor(diffDays / DAYS_PER_SECTION);             // kaçıncı 20 günlük blok
-      const cycleStart = REF + cycle * DAYS_PER_SECTION * DAY;           // bloğun başlangıcı
-      const cycleEnd = cycleStart + (DAYS_PER_SECTION - 1) * DAY;        // bloğun bitiş günü (görünen tarih)
+      $("today").textContent = fmt(now);
+      $("end").textContent = fmt(base.cycleEnd);
 
-      $("today").textContent = fmtUTC(now);
-      $("end").textContent = fmtUTC(cycleEnd);
+      const leftDays = Math.max(0, Math.floor((base.cycleEnd - now)/DAY));
+      $("left").textContent = leftDays + " gün";
 
-      const left = Math.max(0, Math.floor((cycleEnd - now) / DAY));      // bugünü saymadan
-      $("left").textContent = left + " gün";
+      const delta = getDelta() ?? 0;
+      const shownSection = ((base.baseSection + delta - 1) % TOTAL) + 1;
 
-      const startSection = getStartSection();
-      const base = startSection ? (startSection - 1) : 0;
+      $("section").textContent = String(shownSection);
+      $("range").textContent = sectionToRange(shownSection);
 
-      const requiredSection = ((base + cycle) % TOTAL) + 1;              // kişiye göre bölüm
-      const dayIn = diffDays % DAYS_PER_SECTION;
+      const dayIn = base.dayIn; // 0..19
+      let reqPage = (shownSection - 1) * PER + (dayIn + 1);
+      if(reqPage > LAST) reqPage = LAST;
 
-      let reqPage = (requiredSection - 1) * PAGES_PER_SECTION + dayIn + 1;
-      if(reqPage > LAST_PAGE) reqPage = LAST_PAGE;
-
-      $("section").textContent = requiredSection;
-
-      const startPage = (requiredSection - 1) * PAGES_PER_SECTION + 1;
-      let endPage = (requiredSection - 1) * PAGES_PER_SECTION + PAGES_PER_SECTION;
-      if(endPage > LAST_PAGE) endPage = LAST_PAGE;
-      $("range").textContent = startPage + " – " + endPage;
-
-      const last = parseInt(localStorage.getItem("lastPage") || "0", 10);
       const info = $("info");
-
-      if(last && Number.isFinite(last)){
-        const d = last - reqPage;
+      if(lastPage > 0){
+        const diffp = lastPage - reqPage;
         info.style.display = "block";
-        if(d > 0){
+        if(diffp > 0){
           info.className = "info ok";
-          info.textContent = d + " sayfa ileridesin";
-        }else if(d < 0){
+          info.textContent = diffp + " sayfa ileridesin";
+        }else if(diffp < 0){
           info.className = "info bad";
-          info.textContent = Math.abs(d) + " sayfa geridesin";
+          info.textContent = Math.abs(diffp) + " sayfa geridesin";
         }else{
           info.className = "info neutral";
           info.textContent = "Tam yerindesin";
@@ -279,36 +318,30 @@
         info.style.display = "none";
       }
 
-      $("page").value = last ? String(last) : "";
+      $("page").value = (lastPage > 0 ? String(lastPage) : "");
     }
 
     $("save").onclick = () => {
-      let v = parseInt($("page").value || "0", 10);
-      if(Number.isFinite(v) && v >= 1 && v <= LAST_PAGE){
-        localStorage.setItem("lastPage", String(v));
+      const v = parseInt($("page").value || "0", 10);
+      if(v > 0 && v <= LAST){
+        localStorage.setItem("last", String(v));
       }
       render();
     };
 
     $("themeBtn").onclick = () => {
-      const isDark = document.body.classList.toggle("dark");
-      document.body.classList.toggle("light", !isDark);
-      localStorage.setItem("theme", isDark ? "dark" : "light");
+      const dark = document.body.classList.toggle("dark");
+      document.body.classList.toggle("light", !dark);
+      localStorage.setItem("theme", dark ? "dark" : "light");
     };
 
-    $("curBtn").onclick = () => {
-      askCurrentSection(true);
-      render();
-    };
+    $("setNowBtn").onclick = () => askCurrentSection(false);
 
     (function init(){
       const t = localStorage.getItem("theme") || "light";
       document.body.classList.add(t);
 
-      if(!getStartSection()){
-        askCurrentSection(true);  // ZORUNLU ilk açılış
-      }
-
+      requireSetupIfMissing();
       render();
     })();
   </script>
