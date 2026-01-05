@@ -2,8 +2,8 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>CZ TAKİP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CZ TAKİP</title>
 
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -22,10 +22,11 @@
 
     body.light{
       --bg:#eef4ff;
-      --card:#fff;
+      --card:#ffffff;
       --text:#111827;
       --muted:#6b7280;
       --accent:#2563eb;
+      --accent2:#1d4ed8;
       --soft:#e5edff;
       background:var(--bg);
       color:var(--text);
@@ -37,6 +38,7 @@
       --text:#e5e7eb;
       --muted:#9ca3af;
       --accent:#8b5cf6;
+      --accent2:#6366f1;
       --soft:#1e293b;
       background:radial-gradient(circle at top,#1e293b,#020617);
       color:var(--text);
@@ -47,8 +49,8 @@
       font-size:32px;
       font-weight:800;
       letter-spacing:.12em;
+      margin-top:6px;
     }
-
     .subtitle{
       text-align:center;
       font-size:13px;
@@ -59,22 +61,31 @@
     .top{
       display:flex;
       justify-content:space-between;
-      gap:8px;
+      gap:10px;
       margin-bottom:14px;
     }
 
     .chip{
       border-radius:var(--radius-pill);
-      padding:8px 14px;
+      padding:10px 14px;
       border:none;
       background:var(--soft);
       color:var(--accent);
       font-weight:700;
       cursor:pointer;
-      display:flex;
+      display:inline-flex;
       align-items:center;
       gap:8px;
       white-space:nowrap;
+    }
+
+    .chip.primary{
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      color:#fff;
+      box-shadow:0 10px 22px rgba(37,99,235,.22);
+    }
+    body.dark .chip.primary{
+      box-shadow:0 10px 22px rgba(139,92,246,.20);
     }
 
     .card{
@@ -84,19 +95,20 @@
       margin-bottom:12px;
       box-shadow:var(--shadow);
     }
-
     .card h3{
       font-size:18px;
       margin-bottom:8px;
+      display:flex;
+      align-items:center;
+      gap:8px;
     }
 
     .row{
       display:flex;
       justify-content:space-between;
-      margin-top:4px;
+      margin-top:6px;
       gap:12px;
     }
-
     .label{color:var(--muted)}
     .value{font-weight:800}
 
@@ -108,18 +120,23 @@
       font-size:18px;
       text-align:center;
       margin-top:6px;
-      background:transparent;
-      color:inherit;
+      outline:none;
+      background:#fff;
+      color:#111827;
+    }
+    body.dark input{
+      background:#0b1224;
+      color:var(--text);
+      border:1px solid rgba(148,163,184,.25);
     }
 
     .info{
-      margin-top:8px;
+      margin-top:10px;
       padding:10px 12px;
-      border-radius:12px;
+      border-radius:14px;
       font-weight:800;
       display:none;
     }
-
     .ok{background:#e8ffe8;color:#16a34a}
     .bad{background:#ffe8e8;color:#dc2626}
     .neutral{background:#e8f0ff;color:#2563eb}
@@ -131,21 +148,71 @@
       border-radius:var(--radius-pill);
       border:none;
       font-size:18px;
-      font-weight:900;
+      font-weight:800;
       background:linear-gradient(90deg,#2563eb,#1d4ed8);
       color:#fff;
       cursor:pointer;
     }
-
     body.dark .save{
-      background:linear-gradient(90deg,#8b5cf6,#6d28d9);
+      background:linear-gradient(90deg,#8b5cf6,#6366f1);
     }
 
-    .note{
-      margin-top:10px;
+    /* MODAL */
+    .modal-backdrop{
+      position:fixed;inset:0;
+      background:rgba(2,6,23,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+    .modal{
+      width:min(520px,100%);
+      background:var(--card);
+      color:var(--text);
+      border-radius:22px;
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
+      padding:16px;
+    }
+    .modal h4{
+      font-size:18px;
+      margin-bottom:8px;
+      font-weight:900;
+    }
+    .modal p{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:12px;
+      line-height:1.35;
+    }
+    .modal-actions{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+    }
+    .btn{
+      flex:1;
+      padding:12px 14px;
+      border-radius:999px;
+      border:none;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btn.secondary{
+      background:var(--soft);
+      color:var(--accent);
+    }
+    .btn.primary{
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      color:#fff;
+    }
+
+    .small{
       font-size:12px;
       color:var(--muted);
-      line-height:1.35;
+      margin-top:10px;
+      text-align:center;
     }
   </style>
 </head>
@@ -156,7 +223,7 @@
 
   <div class="top">
     <button id="themeBtn" class="chip">🌙 Tema</button>
-    <button id="setNowBtn" class="chip">⚙️ Şu anki bölüm</button>
+    <button id="setNowBtn" class="chip primary">✨ Şu anki bölüm</button>
   </div>
 
   <div class="card">
@@ -174,20 +241,30 @@
 
   <div class="card">
     <h3>📖 Okuma Girişi</h3>
-    <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa">
+    <input id="page" type="number" min="1" max="604" placeholder="Son okuduğun sayfa" />
     <div id="info" class="info neutral"></div>
     <button class="save" id="save">Kaydet</button>
+  </div>
 
-    <div class="note" id="note">
-      Not: Sisteme ilk kez geçerken “Şu anki bölüm” biliniyorsa onu gir.
-      Eğer sadece “Şu anki bölümün” var ama ilk başladığın bölümü hatırlamıyorsan, ekip içi WhatsApp notuna bak.
+  <!-- MODAL -->
+  <div id="modalWrap" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h4>Şu anki bölümünü gir</h4>
+      <p>Sistemi ilk kez kullanırken bir kere girmen yeterli. Sonradan istersen yine değiştirebilirsin.</p>
+      <input id="nowInput" type="number" min="1" max="30" placeholder="1–30" />
+      <div class="modal-actions">
+        <button id="cancelModal" class="btn secondary">İptal</button>
+        <button id="okModal" class="btn primary">Tamam</button>
+      </div>
+      <div class="small">Örnek: “Şu an 8. bölümdeyim” → 8 yaz</div>
     </div>
   </div>
 
   <script>
     const DAY = 86400000;
 
-    const REF  = Date.UTC(2022,3,12); // referans başlangıç (değiştirme)
+    /* SİSTEM REFERANSI (değiştirme) */
+    const REF = Date.UTC(2022, 3, 12);   // 12.04.2022 (UTC)
     const TOTAL = 30;
     const PER = 20;
     const LAST = 604;
@@ -204,145 +281,140 @@
       const dd = String(d.getUTCDate()).padStart(2,"0");
       const mm = String(d.getUTCMonth()+1).padStart(2,"0");
       const yy = d.getUTCFullYear();
-      return dd + "." + mm + "." + yy;
+      return dd+"."+mm+"."+yy;
     }
 
-    function clampSection(n){
-      const v = parseInt(n,10);
-      if(!Number.isFinite(v)) return null;
-      if(v < 1 || v > TOTAL) return null;
-      return v;
+    function mod(n,m){ return ((n % m) + m) % m; }
+
+    function getShift(){
+      return parseInt(localStorage.getItem("shift") || "0", 10);
     }
 
-    function computeBase(nowUTC){
-      let diff = Math.floor((nowUTC - REF)/DAY);
-      if(diff < 0) diff = 0;
-
-      const cycle = Math.floor(diff / 20);
-      const dayIn = diff % 20;
-
-      const baseSection = (cycle % TOTAL) + 1;  // 1..30
-      const baseDayIn = dayIn;                 // 0..19
-
-      const cycleEnd = REF + cycle*20*DAY + 19*DAY;
-
-      return { diff, cycle, dayIn: baseDayIn, baseSection, cycleEnd };
+    function setShift(s){
+      localStorage.setItem("shift", String(s));
     }
 
-    function getDelta(){
-      const raw = localStorage.getItem("delta");
-      const v = parseInt(raw,10);
-      if(!Number.isFinite(v)) return null;
-      if(v < 0 || v >= TOTAL) return null;
-      return v;
-    }
-
-    function requireSetupIfMissing(){
-      const d = getDelta();
-      if(d === null){
-        askCurrentSection(true);
-      }
-    }
-
-    function askCurrentSection(isMandatory){
+    function baseSectionForToday(){
       const now = todayUTC();
-      const base = computeBase(now).baseSection;
+      let diff = Math.floor((now - REF) / DAY);
+      if(diff < 0) diff = 0;
+      const cycle = Math.floor(diff / 20);
+      return (cycle % TOTAL) + 1;  // 1..30
+    }
 
-      const msg =
-        "Şu anki bölümün (1-30):\n\n" +
-        "Not: Bugün sistemin baz bölümü = " + base + ".\n" +
-        "Girdiğin bölüm, bundan sonraki hesaplamayı sana göre ayarlar.";
+    function openModal(force){
+      $("modalWrap").style.display = "flex";
+      $("modalWrap").setAttribute("aria-hidden","false");
+      $("nowInput").value = "";
+      $("nowInput").focus();
 
-      let input = prompt(msg, "");
-      if(input === null){
-        if(isMandatory){
-          alert("Devam etmek için bir kez 'Şu anki bölüm' girmelisin.");
-          return askCurrentSection(true);
-        }
-        return;
+      if(force){
+        $("cancelModal").style.display = "none";
+      }else{
+        $("cancelModal").style.display = "";
       }
+    }
 
-      const userSection = clampSection(input);
-      if(userSection === null){
-        alert("Lütfen 1 ile 30 arasında bir sayı gir.");
-        return askCurrentSection(isMandatory);
-      }
+    function closeModal(){
+      $("modalWrap").style.display = "none";
+      $("modalWrap").setAttribute("aria-hidden","true");
+    }
 
-      const delta = (userSection - base + TOTAL) % TOTAL; // DOĞRU yön
-      localStorage.setItem("delta", String(delta));
+    function applyNowSectionInput(v){
+      const now = baseSectionForToday();     // sistemin bugünkü baz bölümü
+      const userNow = v;                     // kullanıcının bugün “şu anki bölümü”
+      const shift = mod((userNow - now), TOTAL); // kaydırma
+      setShift(shift);
+      closeModal();
       render();
     }
 
-    function sectionToRange(section){
-      const start = (section - 1) * PER + 1;
-      const end = Math.min(section * PER, LAST);
-      return start + " – " + end;
-    }
-
     function render(){
-      const lastPage = parseInt(localStorage.getItem("last") || "0", 10);
+      const last = parseInt(localStorage.getItem("last") || "0", 10);
       const now = todayUTC();
-      const base = computeBase(now);
+
+      let diff = Math.floor((now - REF) / DAY);
+      if(diff < 0) diff = 0;
+
+      const cycle = Math.floor(diff / 20);
+      const cycleEnd = REF + cycle * 20 * DAY + 19 * DAY;
 
       $("today").textContent = fmt(now);
-      $("end").textContent = fmt(base.cycleEnd);
+      $("end").textContent = fmt(cycleEnd);
 
-      const leftDays = Math.max(0, Math.floor((base.cycleEnd - now)/DAY));
+      /* Kalan gün: BUGÜNÜ SAYMA (04→20 = 16) */
+      const leftDays = Math.max(0, Math.floor((cycleEnd - now) / DAY));
       $("left").textContent = leftDays + " gün";
 
-      const delta = getDelta() ?? 0;
-      const shownSection = ((base.baseSection + delta - 1) % TOTAL) + 1;
+      const base = (cycle % TOTAL) + 1;     // 1..30
+      const section = mod((base - 1) + getShift(), TOTAL) + 1;
 
-      $("section").textContent = String(shownSection);
-      $("range").textContent = sectionToRange(shownSection);
-
-      const dayIn = base.dayIn; // 0..19
-      let reqPage = (shownSection - 1) * PER + (dayIn + 1);
+      const dayIn = diff % 20;              // 0..19
+      let reqPage = (section - 1) * PER + dayIn + 1;
       if(reqPage > LAST) reqPage = LAST;
 
+      $("section").textContent = section;
+      $("range").textContent = (section === 30)
+        ? "581 – 604"
+        : ((section - 1) * 20 + 1) + " – " + ((section - 1) * 20 + 20);
+
       const info = $("info");
-      if(lastPage > 0){
-        const diffp = lastPage - reqPage;
+      if(last){
+        const diffp = last - reqPage;
         info.style.display = "block";
-        if(diffp > 0){
-          info.className = "info ok";
-          info.textContent = diffp + " sayfa ileridesin";
-        }else if(diffp < 0){
-          info.className = "info bad";
-          info.textContent = Math.abs(diffp) + " sayfa geridesin";
-        }else{
-          info.className = "info neutral";
-          info.textContent = "Tam yerindesin";
-        }
+        if(diffp > 0){ info.className="info ok"; info.textContent = diffp + " sayfa ileridesin"; }
+        else if(diffp < 0){ info.className="info bad"; info.textContent = Math.abs(diffp) + " sayfa geridesin"; }
+        else{ info.className="info neutral"; info.textContent = "Tam yerindesin"; }
       }else{
         info.style.display = "none";
       }
 
-      $("page").value = (lastPage > 0 ? String(lastPage) : "");
+      $("page").value = last || "";
     }
 
     $("save").onclick = () => {
       const v = parseInt($("page").value || "0", 10);
-      if(v > 0 && v <= LAST){
-        localStorage.setItem("last", String(v));
-      }
+      if(v > 0 && v <= LAST) localStorage.setItem("last", String(v));
       render();
     };
 
     $("themeBtn").onclick = () => {
-      const dark = document.body.classList.toggle("dark");
-      document.body.classList.toggle("light", !dark);
-      localStorage.setItem("theme", dark ? "dark" : "light");
+      const d = document.body.classList.toggle("dark");
+      document.body.classList.toggle("light", !d);
+      localStorage.setItem("theme", d ? "dark" : "light");
     };
 
-    $("setNowBtn").onclick = () => askCurrentSection(false);
+    $("setNowBtn").onclick = () => {
+      openModal(false);
+    };
+
+    $("cancelModal").onclick = () => {
+      closeModal();
+    };
+
+    $("okModal").onclick = () => {
+      const v = parseInt($("nowInput").value || "0", 10);
+      if(v >= 1 && v <= 30) applyNowSectionInput(v);
+    };
+
+    $("nowInput").addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){
+        const v = parseInt($("nowInput").value || "0", 10);
+        if(v >= 1 && v <= 30) applyNowSectionInput(v);
+      }
+    });
 
     (function init(){
       const t = localStorage.getItem("theme") || "light";
       document.body.classList.add(t);
 
-      requireSetupIfMissing();
       render();
+
+      /* ZORUNLU AÇILIŞ: daha önce ayarlanmadıysa */
+      const hasShift = localStorage.getItem("shift");
+      if(hasShift === null){
+        openModal(true);
+      }
     })();
   </script>
 </body>
